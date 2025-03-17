@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Callable, Dict, List, Any
+from typing import Callable, Dict, List, Any, Union
 from arborparser.node import ChainNode, TreeNode
 import json
 from pathlib import Path
@@ -231,14 +231,16 @@ class TreeExporter:
 
     @staticmethod
     def export_to_json_file(
-        tree: TreeNode, file_path: str | Path, concat_title_in_content: bool = False
+        tree: TreeNode,
+        file_path: Union[str, Path],
+        concat_title_in_content: bool = False,
     ) -> None:
         """
         Export the tree structure to a JSON file.
 
         Args:
             tree (TreeNode): Root of the tree to export.
-            file_path (str | Path): Output file path.
+            file_path (Union[str, Path]): Output file path.
             concat_title_in_content (bool): Whether to concatenate title in content.
 
         Returns:
