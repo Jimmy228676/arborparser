@@ -160,25 +160,50 @@ class TreeExporter:
         return "\n".join(lines)
 
     @staticmethod
-    def export_to_json(tree: TreeNode) -> str:
-        """将树结构导出为JSON字符串"""
+    def export_to_json(tree: TreeNode, concat_title_in_content: bool = False) -> str:
+        """
+        将树结构导出到JSON字符串
+        :param tree: 树结构根节点
+        :param concat_title_in_content: 是否将标题合并到内容中
+
+        :return: JSON字符串
+        """
         return json.dumps(
-            TreeExporter._node_to_dict(tree), ensure_ascii=False, indent=4
+            TreeExporter._node_to_dict(tree, concat_title_in_content),
+            ensure_ascii=False,
+            indent=4,
         )
 
     @staticmethod
-    def export_to_json_file(tree: TreeNode, file_path: str | Path) -> None:
-        """将树结构导出到JSON文件"""
+    def export_to_json_file(
+        tree: TreeNode, file_path: str | Path, concat_title_in_content: bool = False
+    ) -> None:
+        """
+        将树结构导出到JSON文件
+        :param tree: 树结构根节点
+        :param file_path: 输出文件路径
+        :param concat_title_in_content: 是否将标题合并到内容中
+
+        :return: None
+        """
         file_path = Path(file_path)
-        json_data = TreeExporter.export_to_json(tree)
+        json_data = TreeExporter.export_to_json(tree, concat_title_in_content)
         file_path.write_text(json_data, encoding="utf-8")
 
     @staticmethod
-    def _node_to_dict(node: TreeNode) -> Dict[str, Any]:
+    def _node_to_dict(node: TreeNode, concat_title_in_content: bool) -> Dict[str, Any]:
         """将节点转换为字典格式"""
         return {
             "title": node.title,
             "level_seq": node.level_seq,
             "level_text": node.level_text,
-            "children": [TreeExporter._node_to_dict(child) for child in node.children],
+            "content": (
+                node.content
+                if not concat_title_in_content
+                else f"{node.level_text} {node.title}\n{node.content}"
+            ),
+            "children": [
+                TreeExporter._node_to_dict(child, concat_title_in_content)
+                for child in node.children
+            ],
         }
