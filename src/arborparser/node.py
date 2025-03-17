@@ -11,6 +11,14 @@ class BaseNode:
     title: str = ""  # 原始标题文本，不包含层级信息
     content: str = ""  # 关联内容文本
 
+    def get_full_content(self) -> str:
+        """获取节点的完整内容（包括标题和内容）"""
+        return f"{self.level_text} {self.title}\n{self.content}"
+
+    def concat_node(self, node: "BaseNode") -> None:
+        """将另一个节点合并到当前节点的后方"""
+        self.content += node.get_full_content()
+
 
 @dataclass
 class ChainNode(BaseNode):

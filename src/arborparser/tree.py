@@ -198,9 +198,7 @@ class TreeExporter:
             "level_seq": node.level_seq,
             "level_text": node.level_text,
             "content": (
-                node.content
-                if not concat_title_in_content
-                else f"{node.level_text} {node.title}\n{node.content}"
+                node.content if not concat_title_in_content else node.get_full_content()
             ),
             "children": [
                 TreeExporter._node_to_dict(child, concat_title_in_content)
