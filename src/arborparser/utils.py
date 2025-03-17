@@ -1,16 +1,20 @@
 from typing import Optional
 
+# All Roman numerals including lowercase
 ALL_ROMAN_NUMERALS = "IVXLCDMivxlcdm"
+# All Chinese characters used in numeric representation
 ALL_CHINESE_CHARS = "0０零○〇洞1１一壹ㄧ弌么2２二貳贰弍兩两3３三參叁弎参叄4４四肆䦉刀5５五伍6６六陸陆7７七柒拐8８八捌杯9９九玖勾十拾什呀百佰千仟萬万億亿兆京經经垓秭杼穰壤溝沟澗涧正載極"
 
 
 def roman_to_int(roman_str: str) -> Optional[int]:
     """
     Convert a Roman numeral string to an integer.
+
     Args:
-        s: A string containing valid Roman numerals (I, V, X, L, C, D, M)
+        roman_str: A string containing valid Roman numerals (I, V, X, L, C, D, M).
+
     Returns:
-        The integer value of the Roman numeral, or None if the input is invalid
+        The integer value of the Roman numeral, or None if the input is invalid.
     """
     roman_numerals = {
         "I": 1,
@@ -64,13 +68,14 @@ def roman_to_int(roman_str: str) -> Optional[int]:
 
 
 def chinese_to_int(chinese_str: str) -> Optional[int]:
-    """将中文数字转换为阿拉伯数字。
+    """
+    Convert Chinese numeric characters to an integer.
 
     Args:
-        chinese_str: 中文数字字符串，支持简体、繁体和其他变体
+        chinese_str: Chinese numeric string supporting simplified, traditional, and variants.
 
     Returns:
-        转换后的整数，如果输入无效则返回None
+        The converted integer, or None if the input is invalid.
     """
     digit_chars = [
         "0０零○〇洞",
@@ -109,24 +114,24 @@ def chinese_to_int(chinese_str: str) -> Optional[int]:
     def get_magnitude_value(char: str) -> int:
         return next((i for i, chars in enumerate(magnitude_chars) if char in chars), -1)
 
-    # 预处理：移除空白并处理符号
+    # Pre-process: remove spaces and handle sign
     normalized_str = "".join(chinese_str.split())
     sign = -1 if normalized_str.startswith(("負", "负")) else 1
     if normalized_str.startswith(("正", "負", "负")):
         normalized_str = normalized_str[1:]
 
-    # 处理纯数字情况
+    # Handle pure numeric cases
     if all(any(c in chars for chars in digit_chars) for c in normalized_str):
         result = sum(
             get_digit_value(c) * (10**i) for i, c in enumerate(reversed(normalized_str))
         )
         return result * sign
 
-    # 处理"十"开头的特殊情况（如"十一"表示"一十一"）
+    # Handle special case starting with "十" (e.g., "十一" means "一十一")
     if any(normalized_str.startswith(c) for c in unit_chars[0]):
         normalized_str = "一" + normalized_str
 
-    # 处理带单位的数字
+    # Process numbers with units
     current_sum = 0
     section_value = 0
     digit_value = 0
@@ -146,14 +151,14 @@ def chinese_to_int(chinese_str: str) -> Optional[int]:
         magnitude = get_magnitude_value(char)
         if magnitude != -1:
             section_value += digit_value
-            if magnitude <= 2:  # 处理万、亿、兆
+            if magnitude <= 2:  # Handle 万, 亿, 兆
                 current_sum += section_value * (10 ** (4 * (magnitude + 1)))
-            else:  # 处理更大的数值
+            else:  # Handle larger values
                 current_sum += section_value * pow(10, 4 * (magnitude + 1))
             section_value = digit_value = 0
             continue
 
-        return None  # 遇到无效字符
+        return None  # Invalid character encountered
 
     final_result = current_sum + section_value + digit_value
     return final_result * sign
@@ -161,37 +166,37 @@ def chinese_to_int(chinese_str: str) -> Optional[int]:
 
 if __name__ == "__main__":
     chinese_patterns_test = [
-        # 基本数字
+        # Basic numbers
         "零",
         "一",
         "二",
         "九",
-        # 特殊写法
+        # Special variations
         "壹",
         "贰",
         "陆",
         "柒",
         "捌",
         "玖",
-        # 十位数
+        # Tens
         "十",
         "十一",
         "二十",
         "九十九",
-        # 百位数
+        # Hundreds
         "一百",
         "一百零一",
         "一百一十",
         "一百二十八",
         "九百九十九",
-        # 千位数
+        # Thousands
         "一千",
         "一千零一",
         "一千零十",
         "一千一百",
         "一千二百三十四",
         "九千八百七十六",
-        # 万位数
+        # Ten thousands
         "一万",
         "一万零一",
         "一万零百",
@@ -201,51 +206,51 @@ if __name__ == "__main__":
         "一万零一十",
         "一万一千零一",
         "一万二千三百四十五",
-        # 十万位数
+        # Hundred thousands
         "十万",
         "十万零一",
         "二十万零一",
         "九十九万九千九百九十九",
-        # 亿位数
+        # Millions
         "一亿",
         "一亿零一",
         "一亿零一万",
         "一亿零十万",
         "一亿二千三百四十五万六千七百八十九",
         "五亿零三百二十万零一百零一",
-        # 更大的数
+        # Larger values
         "一兆",
         "一京",
         "一垓",
         "一秭",
         "一穰",
-        # 带正负号
+        # Positive and negative signs
         "正一",
         "负一",
         "正十亿",
         "负十亿",
-        # 繁体写法
+        # Traditional writing
         "壹佰贰拾叁",
         "貳仟參佰肆拾伍",
         "陸萬柒仟捌佰玖拾",
-        # 混合写法
+        # Mixed writing
         "一億二千萬",
         "一亿零兩千萬",
         "壹億零二千万",
-        # 零的特殊用法
+        # Special usage of zero
         "一万零零零一",
         "一亿零零零零一",
         "十亿零五",
-        # 特殊格式
-        "廿一",  # 应返回None，不支持古体字
-        "卅二",  # 应返回None，不支持古体字
-        "正负一",  # 应返回None，符号冲突
-        "一百萬億",  # 应返回None，单位顺序错误
-        # 包含空格
+        # Special formats
+        "廿一",  # Should return None, unsupported archaic writing
+        "卅二",  # Should return None, unsupported archaic writing
+        "正负一",  # Should return None, conflicting sign
+        "一百萬億",  # Should return None, incorrect unit order
+        # With spaces
         "一 二 三",
         "一万 零 一",
         "  一亿  二千万  ",
-        # 边界测试
+        # Boundary tests
         "零零零零",
         "一零零零",
         "九九九九",
@@ -257,7 +262,7 @@ if __name__ == "__main__":
         print(f"{pattern}=>{chinese_to_int(pattern)}")
 
     roman_patterns_test = [
-        # 基本数字 (1-10)
+        # Basic numbers (1-10)
         "I",
         "II",
         "III",
@@ -268,7 +273,7 @@ if __name__ == "__main__":
         "VIII",
         "IX",
         "X",
-        # 十位数 (11-99)
+        # Tens (11-99)
         "XI",
         "XIV",
         "XV",
@@ -282,7 +287,7 @@ if __name__ == "__main__":
         "LI",
         "XC",
         "XCIX",
-        # 百位数 (100-999)
+        # Hundreds (100-999)
         "C",
         "CI",
         "CX",
@@ -294,7 +299,7 @@ if __name__ == "__main__":
         "DCCC",
         "CM",
         "CMXCIX",
-        # 千位数 (1000-3999)
+        # Thousands (1000-3999)
         "M",
         "MI",
         "MX",
@@ -306,33 +311,33 @@ if __name__ == "__main__":
         "MM",
         "MMM",
         "MMMCMXCIX",
-        # 小写测试
+        # Lowercase test
         "i",
         "iv",
         "xl",
         "cd",
         "cm",
         "mcmxcix",
-        # 混合大小写
+        # Mixed case
         "IvXlCdM",
         "MCmXCiX",
-        # 边界测试
+        # Boundary tests
         "",
         " ",
         "IIII",
         "MMMM",
-        # 非法字符
+        # Invalid characters
         "ABC",
         "XIVY",
         "123",
         "M1CM",
         "I.V",
         "I-V",
-        # 带空格
+        # With spaces
         "X I",
         " MC ",
         "M C M",
-        # 复杂组合测试
+        # Complex combinations
         "MDCLXVI",  # 1666
         "MCMXCIX",  # 1999
         "MMCDXXI",  # 2421

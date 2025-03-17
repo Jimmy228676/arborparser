@@ -5,9 +5,8 @@ from arborparser.pattern import (
     NUMERIC_DOT_PATTERN_BUILDER,
 )
 
-
 if __name__ == "__main__":
-    # 测试数据
+    # Sample data
     test_text = """
     第1章 动物
     1.1 哺乳类
@@ -25,23 +24,23 @@ if __name__ == "__main__":
     2.1.2 单子叶植物
     """
 
-    # 配置解析规则
+    # Configure parsing rules
     patterns = [
         CHINESE_CHAPTER_PATTERN_BUILDER.build(),
         NUMERIC_DOT_PATTERN_BUILDER.build(),
     ]
 
-    # 解析过程
+    # Parsing process
     parser = ChainParser(patterns)
     chain = parser.parse_to_chain(test_text)
 
-    print("=== 链结构 ===")
+    print("=== Chain Structure ===")
     print(TreeExporter.export_chain(chain))
 
-    # 构建树
+    # Build the tree
     builder = TreeBuilder()
     tree = builder.build_tree(chain)
 
-    print("\n=== 树结构 ===")
-    # print(TreeExporter.export_tree(tree))
-    print(TreeExporter.export_to_json(tree, concat_title_in_content=True))
+    print("\n=== Tree Structure ===")
+    print(TreeExporter.export_tree(tree))
+    # print(TreeExporter.export_to_json(tree, concat_title_in_content=True))
