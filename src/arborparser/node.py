@@ -4,32 +4,61 @@ from typing import List, Optional
 
 @dataclass
 class BaseNode:
-    """所有节点类型的基类"""
+    """
+    Base class for all node types.
 
-    level_seq: List[int]  # 层级序列（如 [1,2,3]）
-    level_text: str = ""  # 层级文本（如 "1.2.3"）
-    title: str = ""  # 原始标题文本，不包含层级信息
-    content: str = ""  # 关联内容文本
+    Attributes:
+        level_seq (List[int]): Sequence representing the hierarchy level (e.g., [1, 2, 3]).
+        level_text (str): Text representation of the hierarchy level (e.g., "1.2.3").
+        title (str): Original title text without hierarchy information.
+        content (str): Associated content text.
+    """
+
+    level_seq: List[int]
+    level_text: str = ""
+    title: str = ""
+    content: str = ""
 
     def get_full_content(self) -> str:
-        """获取节点的完整内容（包括标题和内容）"""
+        """
+        Retrieve the full content of the node (including the title and content).
+
+        Returns:
+            str: The full content text.
+        """
         return f"{self.level_text} {self.title}\n{self.content}"
 
     def concat_node(self, node: "BaseNode") -> None:
-        """将另一个节点合并到当前节点的后方"""
+        """
+        Concatenate another node's content onto the current node.
+
+        Args:
+            node (BaseNode): The node whose content will be concatenated.
+        """
         self.content += node.get_full_content()
 
 
 @dataclass
 class ChainNode(BaseNode):
-    """链式结构的节点，仅保存平面信息"""
+    """
+    Node in a chain structure; stores flat information only.
 
-    pattern_priority: int = 0  # 匹配到的模式优先级，用于排序
+    Attributes:
+        pattern_priority (int): Priority of the matched pattern, used for sorting.
+    """
+
+    pattern_priority: int = 0
 
 
 @dataclass
 class TreeNode(BaseNode):
-    """树形结构的节点，包含层级关系"""
+    """
+    Node in a tree structure; includes hierarchical relationships.
+
+    Attributes:
+        parent (Optional[TreeNode]): Parent node in the tree.
+        children (List[TreeNode]): List of child nodes.
+    """
 
     parent: Optional["TreeNode"] = None
     children: List["TreeNode"] = field(default_factory=list)

@@ -11,20 +11,31 @@ from arborparser.utils import (
 
 @dataclass(frozen=True)
 class NumberTypeInfo:
+    """
+    Information about a number type, including its regex pattern and conversion method.
+
+    Attributes:
+        pattern (str): The regex pattern to match this number type.
+        converter (Callable[[str], int]): Function to convert matched strings to integers.
+        name (str): The name of the number type.
+    """
+
     pattern: str
-    converter: Callable[[str], int]  # 将字符串转换为整数
+    converter: Callable[[str], int]
     name: str
 
 
 class NumberType:
+    """
+    Class containing different types of number information.
+    """
+
     ARABIC = NumberTypeInfo(pattern=r"\d+", converter=int, name="arabic")
     ROMAN = NumberTypeInfo(
         pattern=f"[{ALL_ROMAN_NUMERALS}]+", converter=roman_to_int, name="roman"
     )
     CHINESE = NumberTypeInfo(
-        pattern=f"[{ALL_CHINESE_CHARS}]+",
-        converter=chinese_to_int,
-        name="chinese",
+        pattern=f"[{ALL_CHINESE_CHARS}]+", converter=chinese_to_int, name="chinese"
     )
     LETTER = NumberTypeInfo(
         pattern=r"[A-Z]", converter=lambda x: ord(x) - ord("A") + 1, name="letter"
@@ -38,15 +49,34 @@ class NumberType:
 
 @dataclass
 class LevelPattern:
+    """
+    A pattern for matching and converting text into a hierarchical list of integers.
+
+    Attributes:
+        regex (re.Pattern[str]): Compiled regex pattern for matching.
+        converter (Callable[[re.Match[str]], List[int]]): Function to convert matches to a list of integers.
+        description (str): Description of the pattern.
+    """
+
     regex: re.Pattern[str]
-    converter: Callable[
-        [re.Match[str]], List[int]
-    ]  # 将regex匹配结果转换为层级列表（例如[1,2,3]）
+    converter: Callable[[re.Match[str]], List[int]]
     description: str
 
 
 @dataclass(frozen=True)
 class PatternBuilder:
+    """
+    A builder for creating LevelPattern instances with configurable parameters.
+
+    Attributes:
+        prefix_regex (str): Regex pattern to match before the number sequence.
+        number_type (NumberTypeInfo): Type of numbers to match and convert.
+        suffix_regex (str): Regex pattern to match after the number sequence.
+        separator (str): Character used to separate numbers in the sequence.
+        min_level (int): Minimum number of levels to match.
+        max_level (int): Maximum number of levels to match.
+    """
+
     prefix_regex: str = ""
     number_type: NumberTypeInfo = field(default_factory=lambda: NumberType.ARABIC)
     suffix_regex: str = r"\s+"
@@ -55,12 +85,12 @@ class PatternBuilder:
     max_level: int = 32
 
     def __post_init__(self) -> None:
-
-        # 检查分隔符是否是单个字符
+        """
+        Validates the configuration of the PatternBuilder.
+        """
         if len(self.separator) > 1:
             raise ValueError(f"Separator {self.separator} must be a single character")
 
-        # 检查prefix和suffix是否是有效的正则表达式
         try:
             re.compile(self.prefix_regex)
         except re.error:
@@ -78,12 +108,26 @@ class PatternBuilder:
                 f"Maximum level {self.max_level} must be greater than or equal to minimum level {self.min_level}"
             )
 
-    def modify(self, **kwargs) -> "PatternBuilder":  # type: ignore
+    def modify(self, **kwargs) -> "PatternBuilder":
+        """
+        Create a new PatternBuilder with modified attributes.
+
+        Args:
+            **kwargs: Attributes to modify.
+
+        Returns:
+            PatternBuilder: A new instance with updated attributes.
+        """
         return replace(self, **kwargs)
 
     def build(self) -> LevelPattern:
+        """
+        Build a LevelPattern from the current configuration.
+
+        Returns:
+            LevelPattern: Compiled pattern with conversion logic.
+        """
         number_pattern = self.number_type.pattern
-        # 构建正则表达式，加入层级限制
         level_range_pattern = (
             f"(?:{re.escape(self.separator)}{number_pattern})"
             f"{{{self.min_level - 1},{self.max_level - 1}}}"
@@ -106,7 +150,7 @@ class PatternBuilder:
         )
 
 
-# 预定义的模式构建器
+# Predefined pattern builders
 CHINESE_CHAPTER_PATTERN_BUILDER = PatternBuilder(
     prefix_regex=r"第?",
     number_type=NumberType.CHINESE,

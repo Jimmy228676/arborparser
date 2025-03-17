@@ -1,24 +1,37 @@
-from typing import List, Tuple, Optional
-
+from typing import List, Optional
 from arborparser.node import ChainNode
 from arborparser.pattern import LevelPattern
 
 
 class ChainParser:
+    """
+    Parses text into a sequence of ChainNodes using predefined patterns.
 
-    def __init__(
-        self,
-        patterns: List[LevelPattern],
-    ):
+    Attributes:
+        patterns (List[LevelPattern]): A list of regex patterns, each with a conversion function
+                                       to transform matches into hierarchy lists.
+    """
+
+    def __init__(self, patterns: List[LevelPattern]):
         """
-        :param patterns: 正则模式列表，格式为 (正则表达式, 转换函数)
-                         转换函数将匹配结果转为层级列表
+        Initializes the ChainParser with the given patterns.
+
+        Args:
+            patterns (List[LevelPattern]): List of regex patterns and conversion functions.
         """
         self.patterns = patterns
-        self.current_content: List[str] = []  # 当前收集的内容缓冲区
+        self.current_content: List[str] = []  # Buffer for collecting current content
 
     def parse_to_chain(self, text: str) -> List[ChainNode]:
-        """核心链式解析逻辑"""
+        """
+        Core parsing logic to convert text into a chain of nodes.
+
+        Args:
+            text (str): Input text to be parsed.
+
+        Returns:
+            List[ChainNode]: List of parsed ChainNodes.
+        """
         chain: List[ChainNode] = []
         for line in text.split("\n"):
             line = line.strip()
@@ -26,9 +39,9 @@ class ChainParser:
                 continue
             line = line + "\n"
 
-            # 尝试匹配标题模式
+            # Try to match title pattern
             if (chain_node := self._detect_level(line)) is not None:
-                # 遇到新标题时，提交前一个节点的内容
+                # Submit previous node's content when encountering a new title
                 if chain:
                     chain[-1].content = "\n".join(self.current_content)
                     self.current_content = []
@@ -36,13 +49,21 @@ class ChainParser:
             else:
                 self.current_content.append(line)
 
-        # 处理最后一个节点的内容
+        # Handle the content of the last node
         if chain and self.current_content:
             chain[-1].content = "\n".join(self.current_content)
         return chain
 
     def _detect_level(self, line: str) -> Optional[ChainNode]:
-        """应用所有模式检测标题层级"""
+        """
+        Apply all patterns to detect the title hierarchy.
+
+        Args:
+            line (str): Text line to analyze.
+
+        Returns:
+            Optional[ChainNode]: The detected ChainNode or None if no pattern matches.
+        """
         for priority, pattern in enumerate(self.patterns):
             if match := pattern.regex.match(line):
                 try:
