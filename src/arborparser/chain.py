@@ -51,7 +51,7 @@ class ChainParser:
                     title = line[len(level_text) :].strip()
                     return ChainNode(
                         level_seq=level_seq,
-                        level_text=level_text,
+                        level_text=level_text.strip(),
                         title=title,
                         pattern_priority=priority,
                     )

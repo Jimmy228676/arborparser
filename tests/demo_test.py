@@ -43,5 +43,5 @@ if __name__ == "__main__":
     tree = builder.build_tree(chain)
 
     print("\n=== 树结构 ===")
-    print(TreeExporter.export_tree(tree))
-    # print(TreeExporter.export_to_json(tree))
+    # print(TreeExporter.export_tree(tree))
+    print(TreeExporter.export_to_json(tree, concat_title_in_content=True))
