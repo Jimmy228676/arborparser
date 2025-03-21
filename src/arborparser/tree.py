@@ -212,52 +212,45 @@ class TreeExporter:
         return "\n".join(lines)
 
     @staticmethod
-    def export_to_json(tree: TreeNode, concat_title_in_content: bool = False) -> str:
+    def export_to_json(tree: TreeNode) -> str:
         """
         Export the tree structure to a JSON string.
 
         Args:
             tree (TreeNode): Root of the tree to export.
-            concat_title_in_content (bool): Whether to concatenate title in content.
 
         Returns:
             str: JSON string representation of the tree.
         """
         return json.dumps(
-            TreeExporter._node_to_dict(tree, concat_title_in_content),
+            TreeExporter._node_to_dict(tree),
             ensure_ascii=False,
             indent=4,
         )
 
     @staticmethod
-    def export_to_json_file(
-        tree: TreeNode,
-        file_path: Union[str, Path],
-        concat_title_in_content: bool = False,
-    ) -> None:
+    def export_to_json_file(tree: TreeNode, file_path: Union[str, Path]) -> None:
         """
         Export the tree structure to a JSON file.
 
         Args:
             tree (TreeNode): Root of the tree to export.
             file_path (Union[str, Path]): Output file path.
-            concat_title_in_content (bool): Whether to concatenate title in content.
 
         Returns:
             None
         """
         file_path = Path(file_path)
-        json_data = TreeExporter.export_to_json(tree, concat_title_in_content)
+        json_data = TreeExporter.export_to_json(tree)
         file_path.write_text(json_data, encoding="utf-8")
 
     @staticmethod
-    def _node_to_dict(node: TreeNode, concat_title_in_content: bool) -> Dict[str, Any]:
+    def _node_to_dict(node: TreeNode) -> Dict[str, Any]:
         """
         Convert a node to dictionary format.
 
         Args:
             node (TreeNode): Node to convert.
-            concat_title_in_content (bool): Whether to concatenate title in content.
 
         Returns:
             Dict[str, Any]: Dictionary representation of the node.
@@ -266,11 +259,6 @@ class TreeExporter:
             "title": node.title,
             "level_seq": node.level_seq,
             "level_text": node.level_text,
-            "content": (
-                node.content if not concat_title_in_content else node.get_full_content()
-            ),
-            "children": [
-                TreeExporter._node_to_dict(child, concat_title_in_content)
-                for child in node.children
-            ],
+            "content": node.content,
+            "children": [TreeExporter._node_to_dict(child) for child in node.children],
         }

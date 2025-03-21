@@ -51,4 +51,5 @@ if __name__ == "__main__":
 
     print("\n=== Tree Structure ===")
     print(TreeExporter.export_tree(tree))
-    # print(TreeExporter.export_to_json(tree, concat_title_in_content=True))
+    json_result = TreeExporter.export_to_json(tree)
+    # print(json_result)

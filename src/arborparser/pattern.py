@@ -132,7 +132,7 @@ class PatternBuilder:
             f"(?:{re.escape(self.separator)}{number_pattern})"
             f"{{{self.min_level - 1},{self.max_level - 1}}}"
         )
-        pattern = f"^{self.prefix_regex}({number_pattern}{level_range_pattern}){self.suffix_regex}"
+        pattern = f"^\s*{self.prefix_regex}({number_pattern}{level_range_pattern}){self.suffix_regex}"
 
         def converter(match: re.Match[str]) -> List[int]:
             numbers = match.group(1).split(self.separator)
