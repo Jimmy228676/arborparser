@@ -11,22 +11,13 @@ class BaseNode:
         level_seq (List[int]): Sequence representing the hierarchy level (e.g., [1, 2, 3]).
         level_text (str): Text representation of the hierarchy level (e.g., "1.2.3").
         title (str): Original title text without hierarchy information.
-        content (str): Associated content text.
+        content (str): Associated content text, including level text and title.
     """
 
     level_seq: List[int]
     level_text: str = ""
     title: str = ""
     content: str = ""
-
-    def get_full_content(self) -> str:
-        """
-        Retrieve the full content of the node (including the title and content).
-
-        Returns:
-            str: The full content text.
-        """
-        return f"{self.level_text} {self.title}\n{self.content}"
 
     def concat_node(self, node: "BaseNode") -> None:
         """
@@ -35,7 +26,7 @@ class BaseNode:
         Args:
             node (BaseNode): The node whose content will be concatenated.
         """
-        self.content += node.get_full_content()
+        self.content += node.content
 
 
 @dataclass
