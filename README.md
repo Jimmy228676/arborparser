@@ -16,40 +16,40 @@ Given a text document with headings, ArborParser can parse and structure it as f
 ### Chain Structure
 
 ```
-LEVEL-[1]: 动物
-LEVEL-[1, 1]: 哺乳类
-LEVEL-[1, 1, 1]: 灵长类
-LEVEL-[1, 2]: 爬行类
-LEVEL-[1, 3, 3]: 蛇 # wrong
-LEVEL-[1, 2, 2]: 鳄鱼 # hopefully inserted to the upper nearest 1.2
+LEVEL-[1]: Animals
+LEVEL-[1, 1]: Mammals
+LEVEL-[1, 1, 1]: Primates
+LEVEL-[1, 2]: Reptiles
+LEVEL-[1, 3, 3]: Snakes # wrong
+LEVEL-[1, 2, 2]: Crocodiles # hopefully inserted to the upper nearest 1.2
 LEVEL-[1, 2]: wrong 1.2 # create a new level as a child of 1
-LEVEL-[1, 3]: 鸟类
-LEVEL-[1, 3, 1]: 鹦鹉
-LEVEL-[1, 3, 2]: 鸽子
-LEVEL-[2]: 植物
-LEVEL-[2, 1]: 被子植物
-LEVEL-[2, 1, 1]: 双子叶植物
-LEVEL-[2, 1, 2]: 单子叶植物
+LEVEL-[1, 3]: Birds
+LEVEL-[1, 3, 1]: Parrots
+LEVEL-[1, 3, 2]: Pigeons
+LEVEL-[2]: Plants
+LEVEL-[2, 1]: Angiosperms
+LEVEL-[2, 1, 1]: Dicotyledons
+LEVEL-[2, 1, 2]: Monocotyledons
 ```
 
 ### Tree Structure
 
 ```
 ROOT
-├─ 第1章 动物
-│   ├─ 1.1 哺乳类
-│   │   └─ 1.1.1 灵长类
-│   ├─ 1.2 爬行类
-│   │   └─ 1.2.2 鳄鱼 # hopefully inserted to the upper nearest 1.2
-│   ├─ 1.3.3 蛇 # wrong
+├─ Chapter 1 Animals
+│   ├─ 1.1 Mammals
+│   │   └─ 1.1.1 Primates
+│   ├─ 1.2 Reptiles
+│   │   └─ 1.2.2 Crocodiles # hopefully inserted to the upper nearest 1.2
+│   ├─ 1.3.3 Snakes # wrong
 │   ├─ 1.2 wrong 1.2 # create a new level as a child of 1
-│   └─ 1.3 鸟类
-│       ├─ 1.3.1 鹦鹉
-│       └─ 1.3.2 鸽子
-└─ 第2章 植物
-    └─ 2.1 被子植物
-        ├─ 2.1.1 双子叶植物
-        └─ 2.1.2 单子叶植物
+│   └─ 1.3 Birds
+│       ├─ 1.3.1 Parrots
+│       └─ 1.3.2 Pigeons
+└─ Chapter 2 Plants
+    └─ 2.1 Angiosperms
+        ├─ 2.1.1 Dicotyledons
+        └─ 2.1.2 Monocotyledons
 ```
 
 ## Installation
