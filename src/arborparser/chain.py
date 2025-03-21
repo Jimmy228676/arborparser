@@ -34,15 +34,14 @@ class ChainParser:
         """
         chain: List[ChainNode] = []
         for line in text.split("\n"):
-            if not line.strip():
-                continue
-            line = line + "\n"
 
             # Try to match title pattern
-            if (chain_node := self._detect_level(line)) is not None:
+            if (line.strip()) and (
+                (chain_node := self._detect_level(line)) is not None
+            ):
                 # Submit previous node's content when encountering a new title
                 if chain:
-                    chain[-1].content = "".join(self.current_content)
+                    chain[-1].content = "\n".join(self.current_content)
                     self.current_content = [line]
                 chain.append(chain_node)
             else:
@@ -50,7 +49,7 @@ class ChainParser:
 
         # Handle the content of the last node
         if chain and self.current_content:
-            chain[-1].content = "".join(self.current_content)
+            chain[-1].content = "\n".join(self.current_content)
         return chain
 
     def _detect_level(self, line: str) -> Optional[ChainNode]:
