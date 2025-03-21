@@ -6,17 +6,35 @@ build-backend = "setuptools.build_meta"
 name = "arborparser"
 requires-python = ">=3.9"
 dependencies = [
-    # 你的依赖项
 ]
-dynamic = ["version", "readme"]
+authors = [
+    {name = "Jimmy", email = "jimmy_liang2020@foxmail.com"}
+]
+license = "MIT"
 
-[tool.setuptools]
-package-dir = {"" = "src"}
+description = "ArborParser is a Python library that parses structured text with hierarchical headings into tree representations, enabling customizable pattern recognition and multi-format exports for outlines, reports, and technical documents."
 
-packages = ["arborparser"]
+keywords = ["tree", "parser", "arbor", "python"]
+readme = "README.md"
+
+dynamic = ["version"]
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.urls]
+Repository = "https://github.com/Jimmy228676/arborparser.git"
+Issues = "https://github.com/Jimmy228676/arborparser/issues"
 
 [tool.setuptools.dynamic]
-readme = {file = ["README.md"], content-type = "text/markdown"}
+version = {attr = "arborparser.__version__"}
 
 [tool.mypy]
 exclude = ["build", ".venv"]
