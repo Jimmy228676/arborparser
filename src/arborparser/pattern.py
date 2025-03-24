@@ -156,20 +156,25 @@ CHINESE_CHAPTER_PATTERN_BUILDER = PatternBuilder(
     number_type=NumberType.CHINESE,
     suffix_regex=r"[章回篇节条款]+[\.、\s]*",
 )
-EnglishChapterPatternBuilder = PatternBuilder(
+
+ENGLISH_CHAPTER_PATTERN_BUILDER = PatternBuilder(
     prefix_regex=r"Chapter\s",
     number_type=NumberType.ARABIC,
     suffix_regex=r"[\.\s]*",
 )
+
 NUMERIC_DOT_PATTERN_BUILDER = PatternBuilder(
     number_type=NumberType.ARABIC, separator=r".", suffix_regex=r"[\.\s]*"
 )
+
 NUMERIC_DASH_PATTERN_BUILDER = PatternBuilder(
     number_type=NumberType.ARABIC, separator=r"-", suffix_regex=r"[\.\s]*"
 )
+
 ROMAN_PATTERN_BUILDER = PatternBuilder(
     number_type=NumberType.ROMAN, suffix_regex=r"[\.\s]*"
 )
+
 CIRCLED_PATTERN_BUILDER = PatternBuilder(
     number_type=NumberType.CIRCLED, suffix_regex=r"[\.\s]*"
 )

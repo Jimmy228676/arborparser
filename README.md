@@ -68,7 +68,7 @@ ROOT
 
 To install ArborParser, you can use `pip`:
 
-```bash
+```shell
 pip install arborparser
 ```
 
@@ -80,13 +80,28 @@ Here's a basic example of how to use ArborParser:
 from arborparser.tree import TreeBuilder, TreeExporter
 from arborparser.chain import ChainParser
 from arborparser.pattern import (
-    CHINESE_CHAPTER_PATTERN_BUILDER,
+    ENGLISH_CHAPTER_PATTERN_BUILDER,
     NUMERIC_DOT_PATTERN_BUILDER,
 )
 
+test_text = """
+Chapter 1 Animals
+1.1 Mammals
+1.1.1 Primates
+1.2 Reptiles
+1.2.2 Crocodiles
+1.3 Birds
+1.3.1 Parrots
+1.3.2 Pigeons
+Chapter 2 Plants
+2.1 Angiosperms
+2.1.1 Dicotyledons
+2.1.2 Monocotyledons
+"""
+
 # Define your parsing patterns
 patterns = [
-    CHINESE_CHAPTER_PATTERN_BUILDER.build(),
+    ENGLISH_CHAPTER_PATTERN_BUILDER.build(),
     NUMERIC_DOT_PATTERN_BUILDER.build(),
 ]
 

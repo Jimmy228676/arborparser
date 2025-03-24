@@ -4,14 +4,9 @@ from arborparser.pattern import (
     PatternBuilder,
     NumberType,
     NUMERIC_DOT_PATTERN_BUILDER,
+    ENGLISH_CHAPTER_PATTERN_BUILDER,
 )
 
-# Define the English chapter pattern builder
-EnglishChapterPatternBuilder = PatternBuilder(
-    prefix_regex=r"Chapter\s",
-    number_type=NumberType.ARABIC,
-    suffix_regex=r"[\.\s]*",
-)
 
 if __name__ == "__main__":
     # Sample data (updated to use English chapter format)
@@ -34,7 +29,7 @@ if __name__ == "__main__":
 
     # Configure parsing rules
     patterns = [
-        EnglishChapterPatternBuilder.build(),  # Use the English chapter pattern
+        ENGLISH_CHAPTER_PATTERN_BUILDER.build(),  # Use the English chapter pattern
         NUMERIC_DOT_PATTERN_BUILDER.build(),
     ]
 
