@@ -1,50 +1,31 @@
-from enum import Enum
-from typing import Callable, Dict, List, Any, Union
+from typing import Dict, List, Any, Optional, Union
 from arborparser.node import ChainNode, TreeNode
 import json
 from pathlib import Path
+from abc import ABC, abstractmethod
 
 
-class TreeBuilder:
-    class Strategy(Enum):
-        """Strategy for building the tree."""
+class TreeBuildingStrategy(ABC):
+    """Abstract base class for tree building strategies."""
 
-        STRICT = "strict"
-        BEST_FIT = "best_fit"
-
-    def __init__(self, strategy: "TreeBuilder.Strategy" = Strategy.BEST_FIT):
-        """
-        Initialize the TreeBuilder with a strategy.
-
-        Args:
-            strategy (TreeBuilder.Strategy): The tree building strategy to use.
-        """
-        self.strategy = strategy
-        self.strategy_map: Dict[
-            "TreeBuilder.Strategy", Callable[[List[ChainNode]], TreeNode]
-        ] = {
-            self.Strategy.STRICT: self.strict_build,
-            self.Strategy.BEST_FIT: self.best_fit_build,
-        }
-        # Ensure all enum values are mapped to strategy methods
-        assert set(self.strategy_map.keys()) == set(TreeBuilder.Strategy), (
-            f"Not all strategies are mapped. Missing: "
-            f"{set(TreeBuilder.Strategy) - set(self.strategy_map.keys())}"
-        )
-
+    @abstractmethod
     def build_tree(self, chain: List[ChainNode]) -> TreeNode:
         """
-        Build a tree from a list of ChainNodes based on the selected strategy.
+        Build a tree from a list of ChainNodes.
 
         Args:
-            chain (List[ChainNode]): List of ChainNodes.
+            chain (List[ChainNode]): List of ChainNodes to be converted into a tree.
 
         Returns:
             TreeNode: The root of the constructed tree.
         """
-        return self.strategy_map[self.strategy](chain)
+        pass
 
-    def strict_build(self, chain: List[ChainNode]) -> TreeNode:
+
+class StrictStrategy(TreeBuildingStrategy):
+    """Concrete implementation of a strict tree building strategy."""
+
+    def build_tree(self, chain: List[ChainNode]) -> TreeNode:
         """
         Convert chain nodes to a tree structure using a strict strategy.
 
@@ -52,7 +33,7 @@ class TreeBuilder:
             chain (List[ChainNode]): List of ChainNodes.
 
         Returns:
-            TreeNode: The root of the constructed tree.
+            TreeNode: The root of the constructed tree using strict rules.
         """
 
         def _is_child(parent_seq: List[int], child_seq: List[int]) -> bool:
@@ -62,7 +43,7 @@ class TreeBuilder:
             )
 
         root = TreeNode(level_seq=[], level_text="", title="ROOT")
-        self._stack = [root]  # Current hierarchy path stack
+        stack = [root]  # Current hierarchy path stack
 
         for node in chain:
             new_tree_node = TreeNode(
@@ -74,20 +55,37 @@ class TreeBuilder:
 
             # Logic to find appropriate parent node
             parent = root  # Default parent node is root
-            while self._stack:
-                candidate = self._stack[-1]
+            while stack:
+                candidate = stack[-1]
                 if _is_child(candidate.level_seq, new_tree_node.level_seq):
                     parent = candidate
                     break
-                self._stack.pop()
+                stack.pop()
 
             parent.children.append(new_tree_node)
             new_tree_node.parent = parent
-            self._stack.append(new_tree_node)
+            stack.append(new_tree_node)
 
         return root
 
-    def best_fit_build(self, chain: List[ChainNode]) -> TreeNode:
+
+class BestFitStrategy(TreeBuildingStrategy):
+    """Concrete implementation of a best-fit tree building strategy."""
+
+    def __init__(self, auto_merge_isolated_node: bool = False):
+        """
+        Initialize the BestFitStrategy with specific parameters.
+
+        Args:
+            another_param (str): A parameter specific to the best-fit strategy.
+        """
+        self.auto_merge_isolated_node = auto_merge_isolated_node
+        if auto_merge_isolated_node:
+            raise NotImplementedError(
+                "Auto-merge isolated nodes is not yet implemented."
+            )  # TODO: Implement it
+
+    def build_tree(self, chain: List[ChainNode]) -> TreeNode:
         """
         Build a tree structure with fault tolerance, attempting to place irregular nodes in the best position.
 
@@ -95,7 +93,7 @@ class TreeBuilder:
             chain (List[ChainNode]): List of ChainNodes.
 
         Returns:
-            TreeNode: The root of the constructed tree.
+            TreeNode: The root of the constructed tree using best-fit rules.
         """
 
         def _find_best_parent(node: TreeNode, level_seq: List[int]) -> TreeNode:
@@ -143,6 +141,34 @@ class TreeBuilder:
             parent.children.append(new_tree_node)
 
         return root
+
+
+class TreeBuilder:
+    """Class that builds a tree using a specified strategy."""
+
+    def __init__(self, strategy: Optional[TreeBuildingStrategy] = None):
+        """
+        Initialize the TreeBuilder with a specified strategy.
+
+        Args:
+            strategy (TreeBuildingStrategy): An instance of a strategy to build the tree. None defaults to StrictStrategy.
+        """
+        if strategy is None:
+            strategy = StrictStrategy()  # default strategy
+
+        self.strategy = strategy
+
+    def build_tree(self, chain: List[ChainNode]) -> TreeNode:
+        """
+        Build a tree from a list of ChainNodes using the specified strategy.
+
+        Args:
+            chain (List[ChainNode]): List of ChainNodes.
+
+        Returns:
+            TreeNode: The root of the constructed tree.
+        """
+        return self.strategy.build_tree(chain)
 
 
 class TreeExporter:
