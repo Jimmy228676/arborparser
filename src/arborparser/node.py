@@ -56,7 +56,7 @@ class TreeNode(BaseNode):
 
     def merge_all_children(self) -> None:
         """
-        Merge all children's content into the current node.
+        Merge all children into the current node.
         """
         if not self.children:
             return
@@ -66,3 +66,12 @@ class TreeNode(BaseNode):
             self.concat_node(child)
 
         self.children = []
+
+    def get_full_content(self) -> str:
+        """
+        Get the full content of the current node and all its children"
+        """
+        full_content = self.content
+        for child in self.children:
+            full_content += child.get_full_content()
+        return full_content
