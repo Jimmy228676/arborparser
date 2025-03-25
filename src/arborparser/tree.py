@@ -96,6 +96,9 @@ class BestFitStrategy(TreeBuildingStrategy):
             TreeNode: The root of the constructed tree using best-fit rules.
         """
 
+        # FIXME: root.get_full_content() should always return the original content.
+        # BestFitStrategy violates this constraint.
+
         def _find_best_parent(node: TreeNode, level_seq: List[int]) -> TreeNode:
             """Find the best parent node, returning the node with the most matching sequence."""
             if not level_seq:
