@@ -53,3 +53,16 @@ class TreeNode(BaseNode):
 
     parent: Optional["TreeNode"] = None
     children: List["TreeNode"] = field(default_factory=list)
+
+    def merge_all_children(self) -> None:
+        """
+        Merge all children's content into the current node.
+        """
+        if not self.children:
+            return
+
+        for child in self.children:
+            child.merge_all_children()
+            self.concat_node(child)
+
+        self.children = []
