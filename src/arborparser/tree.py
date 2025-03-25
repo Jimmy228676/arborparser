@@ -115,7 +115,7 @@ class BestFitStrategy(TreeBuildingStrategy):
                     current.level_seq
                     and len(current.level_seq) < len(level_seq)
                     and current.level_seq == level_seq[: len(current.level_seq)]
-                    and len(current.level_seq) > best_match_length
+                    and len(current.level_seq) >= best_match_length
                 ):
                     best_match = current
                     best_match_length = len(current.level_seq)
@@ -154,7 +154,7 @@ class TreeBuilder:
             strategy (TreeBuildingStrategy): An instance of a strategy to build the tree. None defaults to StrictStrategy.
         """
         if strategy is None:
-            strategy = StrictStrategy()  # default strategy
+            strategy = BestFitStrategy()  # default strategy
 
         self.strategy = strategy
 

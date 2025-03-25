@@ -1,8 +1,6 @@
 from arborparser.tree import TreeBuilder, TreeExporter
 from arborparser.chain import ChainParser
 from arborparser.pattern import (
-    PatternBuilder,
-    NumberType,
     NUMERIC_DOT_PATTERN_BUILDER,
     ENGLISH_CHAPTER_PATTERN_BUILDER,
 )
@@ -18,6 +16,7 @@ if __name__ == "__main__":
     1.3.3 Snakes # wrong
     1.2.2 Crocodiles # hopefully inserted to the upper nearest 1.2
     1.2 wrong 1.2 # create a new level as a child of 1
+    1.2.3 Lizards
     1.3 Birds
     1.3.1 Parrots
     1.3.2 Pigeons

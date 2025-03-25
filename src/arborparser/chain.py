@@ -41,8 +41,8 @@ class ChainParser:
             ):
                 # Submit previous node's content when encountering a new title
                 if chain:
-                    chain[-1].content = "\n".join(self.current_content)
-                    self.current_content = [line]
+                    chain[-1].content = "\n".join(self.current_content) + "\n"
+                self.current_content = [line]
                 chain.append(chain_node)
             else:
                 self.current_content.append(line)
