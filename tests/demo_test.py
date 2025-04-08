@@ -1,6 +1,6 @@
-from arborparser.tree import TreeBuilder, TreeExporter
-from arborparser.chain import ChainParser
-from arborparser.pattern import (
+from arborparser import TreeBuilder, TreeExporter
+from arborparser import ChainParser
+from arborparser import (
     NUMERIC_DOT_PATTERN_BUILDER,
     ENGLISH_CHAPTER_PATTERN_BUILDER,
 )
