@@ -2,7 +2,7 @@ from typing import Dict, List, Any, Optional, Union
 from arborparser.node import ChainNode, TreeNode
 import json
 from pathlib import Path
-from arborparser.build_strategy import TreeBuildingStrategy, BestFitStrategy
+from arborparser.build_strategy import TreeBuildingStrategy, AutoPruneStrategy
 
 
 class TreeBuilder:
@@ -16,7 +16,7 @@ class TreeBuilder:
             strategy (TreeBuildingStrategy): An instance of a strategy to build the tree. None defaults to StrictStrategy.
         """
         if strategy is None:
-            strategy = BestFitStrategy()  # default strategy
+            strategy = AutoPruneStrategy()  # default strategy
 
         self.strategy = strategy
 
