@@ -20,7 +20,6 @@ class ChainParser:
             patterns (List[LevelPattern]): List of regex patterns and conversion functions.
         """
         self.patterns = patterns
-        self.current_content: List[str] = []  # Buffer for collecting current content
 
     def parse_to_chain(self, text: str) -> List[ChainNode]:
         """
@@ -32,7 +31,12 @@ class ChainParser:
         Returns:
             List[ChainNode]: List of parsed ChainNodes.
         """
-        chain: List[ChainNode] = []
+
+        chain: List[ChainNode] = [
+            ChainNode(level_seq=[], level_text="", title="ROOT", pattern_priority=0)
+        ]
+        current_content: List[str] = []
+
         for line in text.split("\n"):
 
             # Try to match title pattern
@@ -41,15 +45,15 @@ class ChainParser:
             ):
                 # Submit previous node's content when encountering a new title
                 if chain:
-                    chain[-1].content = "\n".join(self.current_content) + "\n"
-                self.current_content = [line]
+                    chain[-1].content = "\n".join(current_content) + "\n"
+                current_content = [line]
                 chain.append(chain_node)
             else:
-                self.current_content.append(line)
+                current_content.append(line)
 
         # Handle the content of the last node
-        if chain and self.current_content:
-            chain[-1].content = "\n".join(self.current_content)
+        if current_content:
+            chain[-1].content = "\n".join(current_content)
         return chain
 
     def _detect_level(self, line: str) -> Optional[ChainNode]:

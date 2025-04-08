@@ -96,7 +96,8 @@ class TreeNode(BaseNode):
 
     def get_full_content(self) -> str:
         """
-        Get the full content of the current node and all its children"
+        Get the full content of the current node and all its children.
+        The result should be the same as the original text, if using the strategies in this library correctly.
         """
         full_content = self.content
         for child in self.children:

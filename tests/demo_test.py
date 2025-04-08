@@ -47,3 +47,5 @@ if __name__ == "__main__":
     print(TreeExporter.export_tree(tree))
     json_result = TreeExporter.export_to_json(tree)
     # print(json_result)
+
+    assert tree.get_full_content() == test_text

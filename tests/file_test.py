@@ -45,3 +45,5 @@ if __name__ == "__main__":
     # Export tree structure to a file
     with open("output/test1_tree.txt", "w", encoding="utf-8") as file:
         file.write(TreeExporter.export_tree(tree))
+
+    assert tree.get_full_content() == test_text

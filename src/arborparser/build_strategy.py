@@ -21,9 +21,9 @@ class TreeBuildingStrategy(ABC):
         pass
 
 
-def create_root() -> TreeNode:
-    """Create a root node for the tree."""
-    return TreeNode(level_seq=[], level_text="", title="ROOT")
+def is_root(node: BaseNode) -> bool:
+    """Check if a node is the root of a tree."""
+    return len(node.level_seq) == 0
 
 
 def get_prefix(level_seq: List[int]) -> List[int]:
@@ -94,10 +94,13 @@ class StrictStrategy(TreeBuildingStrategy):
                 len(child_seq) == len(parent_seq) + 1 and child_seq[:-1] == parent_seq
             )
 
-        root = TreeNode(level_seq=[], level_text="", title="ROOT")
+        if not is_root(chain[0]):
+            raise ValueError("First node must be root")
+
+        root = TreeNode.from_chain_node(chain[0])
         stack = [root]  # Current hierarchy path stack
 
-        for node in chain:
+        for node in chain[1:]:
             new_tree_node = TreeNode.from_chain_node(node)
 
             # Logic to find appropriate parent node
@@ -128,7 +131,10 @@ class AutoPruneStrategy(TreeBuildingStrategy):
             TreeNode: The root of the constructed tree using auto-prune rules.
         """
 
-        root = create_root()
+        if not is_root(chain[0]):
+            raise ValueError("First node must be root")
+
+        root = TreeNode.from_chain_node(chain[0])
         current_branch: List[TreeNode] = [root]
         not_imm_node_queue: Deque[ChainNode] = deque()
         current_node = root
@@ -173,7 +179,7 @@ class AutoPruneStrategy(TreeBuildingStrategy):
                     return False
             return True
 
-        for node in chain:
+        for node in chain[1:]:
             # add node to tree if it is immediate next to current_node
             if is_imm_next(current_node.level_seq, node.level_seq):
                 # merge not_imm_node_stack into current_node
