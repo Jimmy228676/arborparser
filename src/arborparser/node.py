@@ -54,6 +54,33 @@ class TreeNode(BaseNode):
     parent: Optional["TreeNode"] = None
     children: List["TreeNode"] = field(default_factory=list)
 
+    @staticmethod
+    def from_chain_node(chain_node: ChainNode) -> "TreeNode":
+        """
+        Convert a chain node to a tree node.
+
+        Args:
+            chain_node (ChainNode): The chain node to be converted.
+        Returns:
+            TreeNode: The converted tree node.
+        """
+        return TreeNode(
+            level_seq=chain_node.level_seq,
+            level_text=chain_node.level_text,
+            title=chain_node.title,
+            content=chain_node.content,
+        )
+
+    def add_child(self, child: "TreeNode") -> None:
+        """
+        Add a child node to the current node.
+
+        Args:
+            child (TreeNode): The child node to be added.
+        """
+        child.parent = self
+        self.children.append(child)
+
     def merge_all_children(self) -> None:
         """
         Merge all children into the current node.

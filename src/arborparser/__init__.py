@@ -5,7 +5,7 @@ from arborparser.pattern import LevelPattern, PatternBuilder
 from arborparser.build_strategy import (
     TreeBuildingStrategy,
     StrictStrategy,
-    BestFitStrategy,
+    AutoPruneStrategy,
 )
 from arborparser.chain import ChainParser
 from arborparser.tree import TreeBuilder, TreeExporter
@@ -33,7 +33,7 @@ __all__ = [
     "CIRCLED_PATTERN_BUILDER",
     "TreeBuildingStrategy",
     "StrictStrategy",
-    "BestFitStrategy",
+    "AutoPruneStrategy",
     "TreeBuilder",
     "TreeExporter",
     "ALL_ROMAN_NUMERALS",
