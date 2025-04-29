@@ -7,24 +7,32 @@ from arborparser import (
 
 
 if __name__ == "__main__":
-    # Sample data (updated to use English chapter format)
     test_text = """
-    Chapter 1 Animals
-    1.1 Mammals
-    1.1.1 Primates
-    1.2 Reptiles
-    1.3.3 Snakes # wrong
-    1.2.2 Crocodiles # hopefully inserted to the upper nearest 1.2
-    1.2 wrong 1.2 # create a new level as a child of 1
-    1.2.3 Lizards
-    1.3 Birds
-    1.3.1 Parrots
-    1.3.2 Pigeons
-    Chapter 2 Plants
-    2.1 Angiosperms
-    2.1.1 Dicotyledons
-    2.1.2 Monocotyledons
-    """
+Chapter 1 The Foundation
+    Introductory content for the first chapter.
+
+1.1 Core Concepts
+    Explanation of the fundamental ideas.
+    This section lays the groundwork.
+
+# NOTE: Heading '1.2 Intermediate Concepts' is MISSING here.
+# ArborParser can handle jumping from 1.1 directly to 1.3.
+
+1.3 Advanced Topics
+    Discussing more complex subjects. We build upon the ideas from section 
+    1.1. This section is more advanced and goes into more detail.
+    # NOTE: The '1.1' above is *part of the text content*.
+    # AutoPrune Strategy will identify the discontinuity and prune this wrongly detected node.
+
+Chapter 2 Building Blocks
+    Content for the second chapter.
+
+2.1 Component A
+    Details about the first component.
+
+2.2 Component B
+    Details about the second component. End of document.
+"""
 
     # Configure parsing rules
     patterns = [
