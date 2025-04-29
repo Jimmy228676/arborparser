@@ -59,7 +59,7 @@ def is_imm_next(front_seq: List[int], back_seq: List[int]) -> bool:
 
     if len(front_seq) == len(back_seq):  # eg: 1.1.1 -> 1.1.3
         return (get_prefix(front_seq) == get_prefix(back_seq)) and (
-            get_last_level(front_seq) + 1 == get_last_level(back_seq)
+            get_last_level(front_seq) < get_last_level(back_seq)
         )
     elif len(front_seq) + 1 == len(back_seq):  # eg: 1.2 -> 1.2.1
         return front_seq == get_prefix(back_seq)
@@ -199,6 +199,6 @@ class AutoPruneStrategy(TreeBuildingStrategy):
                     concat_one_not_imm_node_to_current_node()
 
         while not_imm_node_queue:
-            add_node_to_tree(not_imm_node_queue.popleft())
+            concat_one_not_imm_node_to_current_node()
 
         return root
