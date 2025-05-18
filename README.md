@@ -9,7 +9,7 @@ ArborParser is a powerful Python library designed to parse structured text docum
 *   **Built-in Patterns:** Provides ready-to-use patterns for common heading styles (`1.2.3`, `Chapter 1`, `第一章`, etc.).
 *   **Robust Tree Building:** Transforms the linear chain into a true hierarchical `TreeNode` structure.
 *   **Automatic Error Correction:** Includes an `AutoPruneStrategy` to intelligently handle skipped heading levels or lines mistakenly identified as headings.
-*   **Node Manipulation:** Allows merging content between nodes (`concat_node`) for flexibility in handling non-heading text or correcting parsing errors.
+*   **Node Manipulation:** Allows merging content between nodes (`concat_node` `merge_all_children`) for post-processing.
 *   **Reversible Transformation:** Preserves original text, enabling full document reconstruction from the tree (`tree.get_full_content()`).
 *   **Export Capabilities:** Outputs the parsed structure in various formats (e.g., human-readable tree view).
 
