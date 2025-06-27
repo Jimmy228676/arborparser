@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field, replace
-from typing import List, Callable
+from typing import List, Callable, Any
 import re
 from arborparser.utils import (
     roman_to_int,
@@ -25,6 +25,22 @@ class NumberTypeInfo:
     name: str
 
 
+def _safe_roman_converter(roman_str: str) -> int:
+    """Safe Roman numeral converter that always returns an int."""
+    result = roman_to_int(roman_str)
+    if result is None:
+        raise ValueError(f"Invalid Roman numeral: {roman_str}")
+    return result
+
+
+def _safe_chinese_converter(chinese_str: str) -> int:
+    """Safe Chinese numeral converter that always returns an int."""
+    result = chinese_to_int(chinese_str)
+    if result is None:
+        raise ValueError(f"Invalid Chinese numeral: {chinese_str}")
+    return result
+
+
 class NumberType:
     """
     Class containing different types of number information.
@@ -32,10 +48,10 @@ class NumberType:
 
     ARABIC = NumberTypeInfo(pattern=r"\d+", converter=int, name="arabic")
     ROMAN = NumberTypeInfo(
-        pattern=f"[{ALL_ROMAN_NUMERALS}]+", converter=roman_to_int, name="roman"
+        pattern=f"[{ALL_ROMAN_NUMERALS}]+", converter=_safe_roman_converter, name="roman"
     )
     CHINESE = NumberTypeInfo(
-        pattern=f"[{ALL_CHINESE_CHARS}]+", converter=chinese_to_int, name="chinese"
+        pattern=f"[{ALL_CHINESE_CHARS}]+", converter=_safe_chinese_converter, name="chinese"
     )
     LETTER = NumberTypeInfo(
         pattern=r"[A-Z]", converter=lambda x: ord(x) - ord("A") + 1, name="letter"
@@ -108,7 +124,7 @@ class PatternBuilder:
                 f"Maximum level {self.max_level} must be greater than or equal to minimum level {self.min_level}"
             )
 
-    def modify(self, **kwargs) -> "PatternBuilder":
+    def modify(self, **kwargs: Any) -> "PatternBuilder":
         """
         Create a new PatternBuilder with modified attributes.
 
@@ -132,7 +148,7 @@ class PatternBuilder:
             f"(?:{re.escape(self.separator)}{number_pattern})"
             f"{{{self.min_level - 1},{self.max_level - 1}}}"
         )
-        pattern = f"^\s*{self.prefix_regex}({number_pattern}{level_range_pattern}){self.suffix_regex}"
+        pattern = rf"^\s*{self.prefix_regex}({number_pattern}{level_range_pattern}){self.suffix_regex}"
 
         def converter(match: re.Match[str]) -> List[int]:
             numbers = match.group(1).split(self.separator)

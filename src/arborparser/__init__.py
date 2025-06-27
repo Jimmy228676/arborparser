@@ -16,6 +16,8 @@ from arborparser.pattern import (
     NUMERIC_DASH_PATTERN_BUILDER,
     ROMAN_PATTERN_BUILDER,
     CIRCLED_PATTERN_BUILDER,
+    ALL_ROMAN_NUMERALS,
+    ALL_CHINESE_CHARS,
 )
 
 __all__ = [
