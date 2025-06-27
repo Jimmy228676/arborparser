@@ -4,8 +4,6 @@ from arborparser.pattern import (
     CHINESE_CHAPTER_PATTERN_BUILDER,
     ENGLISH_CHAPTER_PATTERN_BUILDER,
     NUMERIC_DOT_PATTERN_BUILDER,
-    ROMAN_PATTERN_BUILDER,
-    CIRCLED_PATTERN_BUILDER,
     PatternBuilder,
     NumberType,
 )
