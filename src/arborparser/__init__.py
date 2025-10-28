@@ -1,4 +1,4 @@
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 
 from arborparser.node import BaseNode, ChainNode, TreeNode
 from arborparser.pattern import LevelPattern, PatternBuilder
