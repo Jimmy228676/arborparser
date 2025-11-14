@@ -5,6 +5,7 @@ ArborParser 是一个功能强大的 Python 库，专门用于解析结构化文
 ## 功能特点
 
 * **链式解析：** 将文本转换为线性序列（`ChainNode` 列表），展现文档的层次结构。
+* **多候选解析：** `parse_to_multi_chain` 会保留每一行的全部标题候选，`TreeBuilder`/`TreeExporter` 可以直接处理 `List[List[ChainNode]]`。
 * **灵活的模式定义：** 支持使用正则表达式和多种数字格式（阿拉伯数字、罗马数字、中文数字、字母、圈号）来定义自定义解析模式。
 * **内置模式：** 内置了常见的标题格式（如 `1.2.3`、`第1章`、`第一章` 等）。
 * **树形结构构建：** 将线性链转换为层次化的 `TreeNode` 结构。
@@ -86,6 +87,76 @@ tree = builder.build_tree(chain)
 # 4. 输出树形结构
 print(TreeExporter.export_tree(tree))
 ```
+
+## 多候选链解析
+
+当某一行可能同时匹配多个模式（或一个模式的 converter 返回多条层级路径）时，可以使用 `ChainParser.parse_to_multi_chain` 保留所有候选，交给下游策略来做最终选择。
+
+```python
+ambiguous_text = """
+Chapter 2 Building Blocks
+    Content for the second chapter.
+
+2.1 A Component
+    Details about the first component.
+
+2.1.1 A details
+    Details 1
+
+2.1 .2 A details 2 [the title is corrupted due to OCR or other reasons]
+    Details 2
+
+2.2 2-Sided Materials B Component
+    Details about the second component.
+"""
+
+non_strict = NUMERIC_DOT_PATTERN_BUILDER.modify(
+    prefix_regex=r"[\#\s]*",
+    suffix_regex=r"[\.\s]*",
+    separator=r"[\.\s]+",
+    is_sep_regex=True,
+    min_level=2,
+).build()
+
+patterns = [
+    ENGLISH_CHAPTER_PATTERN_BUILDER.build(),
+    NUMERIC_DOT_PATTERN_BUILDER.build(),
+    non_strict,
+]
+
+parser = ChainParser(patterns)
+multi_chain = parser.parse_to_multi_chain(ambiguous_text)
+
+print(TreeExporter.export_chain(multi_chain))
+
+builder = TreeBuilder()
+tree_from_multi = builder.build_tree(multi_chain)
+print(TreeExporter.export_tree(tree_from_multi))
+```
+
+示例输出：
+
+```
+[LEVEL-[]: ROOT]
+[LEVEL-[2]: Building Blocks]
+[LEVEL-[2, 1]: A Component, LEVEL-[2, 1]: A Component]
+[LEVEL-[2, 1, 1]: A details, LEVEL-[2, 1, 1]: A details]
+[LEVEL-[2, 1]: 2 A details 2 [...], LEVEL-[2, 1, 2]: A details 2 [...]]
+[LEVEL-[2, 2]: 2-Sided Materials B Component, LEVEL-[2, 2, 2]: -Sided Materials B Component]
+
+ROOT
+└─ Chapter 2 Building Blocks
+    ├─ 2.1 A Component
+    │   ├─ 2.1.1 A details
+    │   └─ 2.1 .2 A details 2 [...]
+    └─ 2.2 2-Sided Materials B Component
+```
+
+要点：
+
+* 外层列表仍按照文本行顺序排列（第一项保持 `ROOT`）。
+* 内层列表按检测顺序/priority 排列。TreeBuilder 会优先选择能与上一节点 `is_imm_next` 的候选，否则回退到 `pattern_priority` 最低的节点。
+* `TreeExporter.export_chain` 在多候选模式下用方括号展示整行候选，可快速定位 OCR 误差或歧义标题。
 
 ## 功能详解
 

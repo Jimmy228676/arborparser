@@ -48,10 +48,14 @@ class NumberType:
 
     ARABIC = NumberTypeInfo(pattern=r"\d+", converter=int, name="arabic")
     ROMAN = NumberTypeInfo(
-        pattern=f"[{ALL_ROMAN_NUMERALS}]+", converter=_safe_roman_converter, name="roman"
+        pattern=f"[{ALL_ROMAN_NUMERALS}]+",
+        converter=_safe_roman_converter,
+        name="roman",
     )
     CHINESE = NumberTypeInfo(
-        pattern=f"[{ALL_CHINESE_CHARS}]+", converter=_safe_chinese_converter, name="chinese"
+        pattern=f"[{ALL_CHINESE_CHARS}]+",
+        converter=_safe_chinese_converter,
+        name="chinese",
     )
     LETTER = NumberTypeInfo(
         pattern=r"[A-Z]", converter=lambda x: ord(x) - ord("A") + 1, name="letter"
@@ -88,7 +92,8 @@ class PatternBuilder:
         prefix_regex (str): Regex pattern to match before the number sequence.
         number_type (NumberTypeInfo): Type of numbers to match and convert.
         suffix_regex (str): Regex pattern to match after the number sequence.
-        separator (str): Character used to separate numbers in the sequence.
+        separator (str): Character or regex used to separate numbers in the sequence.
+        is_sep_regex (bool): Whether the separator should be interpreted as a regex.
         min_level (int): Minimum number of levels to match.
         max_level (int): Maximum number of levels to match.
     """
@@ -97,6 +102,7 @@ class PatternBuilder:
     number_type: NumberTypeInfo = field(default_factory=lambda: NumberType.ARABIC)
     suffix_regex: str = r"\s+"
     separator: str = "."
+    is_sep_regex: bool = False
     min_level: int = 1
     max_level: int = 32
 
@@ -104,7 +110,12 @@ class PatternBuilder:
         """
         Validates the configuration of the PatternBuilder.
         """
-        if len(self.separator) > 1:
+        if self.is_sep_regex:
+            try:
+                re.compile(self.separator)
+            except re.error:
+                raise ValueError(f"Invalid regex pattern in separator: {self.separator}")
+        elif len(self.separator) > 1:
             raise ValueError(f"Separator {self.separator} must be a single character")
 
         try:
@@ -144,14 +155,25 @@ class PatternBuilder:
             LevelPattern: Compiled pattern with conversion logic.
         """
         number_pattern = self.number_type.pattern
+        separator_pattern = (
+            self.separator if self.is_sep_regex else re.escape(self.separator)
+        )
         level_range_pattern = (
-            f"(?:{re.escape(self.separator)}{number_pattern})"
+            f"(?:{separator_pattern}{number_pattern})"
             f"{{{self.min_level - 1},{self.max_level - 1}}}"
         )
         pattern = rf"^\s*{self.prefix_regex}({number_pattern}{level_range_pattern}){self.suffix_regex}"
 
+        split_regex = (
+            re.compile(f"(?:{self.separator})") if self.is_sep_regex else None
+        )
+
         def converter(match: re.Match[str]) -> List[int]:
-            numbers = match.group(1).split(self.separator)
+            seq_text = match.group(1)
+            if split_regex:
+                numbers = [n for n in split_regex.split(seq_text) if n]
+            else:
+                numbers = seq_text.split(self.separator)
             if not (self.min_level <= len(numbers) <= self.max_level):
                 raise ValueError(
                     f"Matched levels ({len(numbers)}) out of range "

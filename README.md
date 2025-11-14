@@ -5,6 +5,7 @@ ArborParser is a powerful Python library designed to parse structured text docum
 ## Features
 
 *   **Chain Parsing:** Converts text into a linear sequence (`ChainNode` list) representing the document's hierarchical structure.
+*   **Multi-Candidate Parsing:** `parse_to_multi_chain` keeps every heading candidate per line and the rest of the toolkit (tree builder/exporter) works directly on the resulting `List[List[ChainNode]]`.
 *   **Flexible Pattern Definition:** Define custom parsing patterns using regular expressions and specific number converters (Arabic, Roman, Chinese, Letters, Circled).
 *   **Built-in Patterns:** Provides ready-to-use patterns for common heading styles (`1.2.3`, `Chapter 1`, `第一章`, etc.).
 *   **Robust Tree Building:** Transforms the linear chain into a true hierarchical `TreeNode` structure.
@@ -86,6 +87,76 @@ tree = builder.build_tree(chain)
 # 4. Print the structured tree
 print(TreeExporter.export_tree(tree))
 ```
+
+## Multi-Chain Parsing
+
+Sometimes a line can match multiple heading patterns (or a converter can emit more than one hierarchy).  Call `ChainParser.parse_to_multi_chain` to preserve every candidate per line and let downstream consumers decide which one to keep.
+
+```python
+ambiguous_text = """
+Chapter 2 Building Blocks
+    Content for the second chapter.
+
+2.1 A Component
+    Details about the first component.
+
+2.1.1 A details
+    Details 1
+
+2.1 .2 A details 2 [the title is corrupted due to OCR or other reasons]
+    Details 2
+
+2.2 2-Sided Materials B Component
+    Details about the second component.
+"""
+
+non_strict = NUMERIC_DOT_PATTERN_BUILDER.modify(
+    prefix_regex=r"[\#\s]*",
+    suffix_regex=r"[\.\s]*",
+    separator=r"[\.\s]+",
+    is_sep_regex=True,
+    min_level=2,
+).build()
+
+patterns = [
+    ENGLISH_CHAPTER_PATTERN_BUILDER.build(),
+    NUMERIC_DOT_PATTERN_BUILDER.build(),
+    non_strict,
+]
+
+parser = ChainParser(patterns)
+multi_chain = parser.parse_to_multi_chain(ambiguous_text)
+
+print(TreeExporter.export_chain(multi_chain))
+
+builder = TreeBuilder()
+tree_from_multi = builder.build_tree(multi_chain)
+print(TreeExporter.export_tree(tree_from_multi))
+```
+
+Sample output (abridged):
+
+```
+[LEVEL-[]: ROOT]
+[LEVEL-[2]: Building Blocks]
+[LEVEL-[2, 1]: A Component, LEVEL-[2, 1]: A Component]
+[LEVEL-[2, 1, 1]: A details, LEVEL-[2, 1, 1]: A details]
+[LEVEL-[2, 1]: 2 A details 2 [...], LEVEL-[2, 1, 2]: A details 2 [...]]
+[LEVEL-[2, 2]: 2-Sided Materials B Component, LEVEL-[2, 2, 2]: -Sided Materials B Component]
+
+ROOT
+└─ Chapter 2 Building Blocks
+    ├─ 2.1 A Component
+    │   ├─ 2.1.1 A details
+    │   └─ 2.1 .2 A details 2 [...]
+    └─ 2.2 2-Sided Materials B Component
+```
+
+Key points:
+
+* Each outer list entry represents a text line (the first entry is still `ROOT`).
+* Each inner list is ordered by detection priority. `TreeBuilder` prefers candidates that immediately follow the previous node (`is_imm_next`), otherwise it falls back to the lowest `pattern_priority`.
+* `TreeExporter.export_chain` renders multi rows in square brackets so you can quickly spot OCR errors or ambiguous headings.
 
 ## Key Features in Detail
 

@@ -8,38 +8,24 @@ from arborparser import (
 
 if __name__ == "__main__":
     test_text = """
-Chapter 1 The Foundation
-    Introductory content for the first chapter.
-
-1.1 Core Concepts
-    Explanation of the fundamental ideas.
-    This section lays the groundwork.
-
-# NOTE: Heading '1.2 Intermediate Concepts' is MISSING here.
-# ArborParser can handle jumping from 1.1 directly to 1.3.
-
-1.3 Advanced Topics
-    Discussing more complex subjects. We build upon the ideas from section 
-    1.1. This section is more advanced and goes into more detail.
-    # NOTE: The '1.1' above is *part of the text content*.
-    # AutoPrune Strategy will identify the discontinuity and prune this wrongly detected node.
-
 Chapter 2 Building Blocks
     Content for the second chapter.
 
-2.1 Component A
+2.1 A Component
     Details about the first component.
 
-2.1.1 Component A.1
-    Details about the first component.
+2.1.1 A details
+    Details 1
 
-2.2 2Component B
-    Details about the second component. End of document.
+2.1 .2 A details 2 [the title is corrupted due to OCR or other reasons]
+    Details 2
+
+2.2 2-Sided Materials B Component
+    Details about the second component.
 """
 
     # Configure parsing rules
-    num_pattern_strict = NUMERIC_DOT_PATTERN_BUILDER
-    num_pattern = NUMERIC_DOT_PATTERN_BUILDER.modify(
+    non_strict_num_pattern = NUMERIC_DOT_PATTERN_BUILDER.modify(
         prefix_regex=r"[\#\s]*",
         suffix_regex=r"[\.\s]*",
         separator=r"[\.\s]+",
@@ -50,7 +36,7 @@ Chapter 2 Building Blocks
     patterns = [
         ENGLISH_CHAPTER_PATTERN_BUILDER.build(),  # Use the English chapter pattern
         NUMERIC_DOT_PATTERN_BUILDER.build(),  # Use the numeric dot pattern
-        num_pattern,
+        non_strict_num_pattern,
     ]
 
     # Parsing process
@@ -67,6 +53,5 @@ Chapter 2 Building Blocks
     print("\n=== Tree Structure ===")
     print(TreeExporter.export_tree(tree))
     json_result = TreeExporter.export_to_json(tree)
-    # print(json_result)
 
     assert tree.get_full_content() == test_text

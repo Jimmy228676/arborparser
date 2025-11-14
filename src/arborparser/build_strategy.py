@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Deque
+from typing import List, Deque, Union, Sequence, Optional, cast
 from arborparser.node import ChainNode, TreeNode, BaseNode
 from collections import deque
 
@@ -8,12 +8,14 @@ class TreeBuildingStrategy(ABC):
     """Abstract base class for tree building strategies."""
 
     @abstractmethod
-    def build_tree(self, chain: List[ChainNode]) -> TreeNode:
+    def build_tree(
+        self, chain: Union[List[ChainNode], List[List[ChainNode]]]
+    ) -> TreeNode:
         """
-        Build a tree from a list of ChainNodes.
+        Build a tree from a list (or list of lists) of ChainNodes.
 
         Args:
-            chain (List[ChainNode]): List of ChainNodes to be converted into a tree.
+            chain: Either single-choice ChainNodes or multi-candidate rows.
 
         Returns:
             TreeNode: The root of the constructed tree.
@@ -74,15 +76,39 @@ def is_imm_next(front_seq: List[int], back_seq: List[int]) -> bool:
         return False
 
 
+def _ensure_multi_chain(
+    chain: Union[List[ChainNode], List[List[ChainNode]]]
+) -> List[List[ChainNode]]:
+    if not chain:
+        raise ValueError("Chain cannot be empty")
+
+    first = chain[0]
+    if isinstance(first, ChainNode):
+        return [[node] for node in chain]  # type: ignore[arg-type]
+    return cast(List[List[ChainNode]], chain)
+
+
+def _select_by_priority(candidates: Sequence[ChainNode]) -> ChainNode:
+    if not candidates:
+        raise ValueError("Expected at least one ChainNode candidate")
+    best = candidates[0]
+    for candidate in candidates[1:]:
+        if candidate.pattern_priority < best.pattern_priority:
+            best = candidate
+    return best
+
+
 class StrictStrategy(TreeBuildingStrategy):
     """Concrete implementation of a strict tree building strategy."""
 
-    def build_tree(self, chain: List[ChainNode]) -> TreeNode:
+    def build_tree(
+        self, chain: Union[List[ChainNode], List[List[ChainNode]]]
+    ) -> TreeNode:
         """
         Convert chain nodes to a tree structure using a strict strategy.
 
         Args:
-            chain (List[ChainNode]): List of ChainNodes.
+            chain: ChainNodes or multi-candidate rows.
 
         Returns:
             TreeNode: The root of the constructed tree using strict rules.
@@ -94,13 +120,15 @@ class StrictStrategy(TreeBuildingStrategy):
                 len(child_seq) == len(parent_seq) + 1 and child_seq[:-1] == parent_seq
             )
 
-        if not is_root(chain[0]):
+        flattened_chain = self._flatten_chain(chain)
+
+        if not is_root(flattened_chain[0]):
             raise ValueError("First node must be root")
 
-        root = TreeNode.from_chain_node(chain[0])
+        root = TreeNode.from_chain_node(flattened_chain[0])
         stack = [root]  # Current hierarchy path stack
 
-        for node in chain[1:]:
+        for node in flattened_chain[1:]:
             new_tree_node = TreeNode.from_chain_node(node)
 
             # Logic to find appropriate parent node
@@ -117,26 +145,44 @@ class StrictStrategy(TreeBuildingStrategy):
 
         return root
 
+    def _flatten_chain(
+        self, chain: Union[List[ChainNode], List[List[ChainNode]]]
+    ) -> List[ChainNode]:
+        multi_chain = _ensure_multi_chain(chain)
+        selected: List[ChainNode] = []
+        for candidates in multi_chain:
+            if not candidates:
+                continue
+            selected.append(_select_by_priority(candidates))
+        if not selected:
+            raise ValueError("Chain cannot be empty after selection")
+        return selected
+
 
 class AutoPruneStrategy(TreeBuildingStrategy):
     """Concrete implementation of an auto-prune tree building strategy."""
 
-    def build_tree(self, chain: List[ChainNode]) -> TreeNode:
+    def build_tree(
+        self, chain: Union[List[ChainNode], List[List[ChainNode]]]
+    ) -> TreeNode:
         """
         Convert chain nodes to a tree structure using an auto-prune strategy.
 
         Args:
-            chain (List[ChainNode]): List of ChainNodes.
+            chain: ChainNodes or multi-candidate rows.
         Returns:
             TreeNode: The root of the constructed tree using auto-prune rules.
         """
 
-        if not is_root(chain[0]):
+        multi_chain = _ensure_multi_chain(chain)
+        root_candidate = _select_by_priority(multi_chain[0])
+
+        if not is_root(root_candidate):
             raise ValueError("First node must be root")
 
-        root = TreeNode.from_chain_node(chain[0])
+        root = TreeNode.from_chain_node(root_candidate)
         current_branch: List[TreeNode] = [root]
-        not_imm_node_queue: Deque[ChainNode] = deque()
+        not_imm_node_queue: Deque[List[ChainNode]] = deque()
         current_node = root
 
         def add_node_and_update_current_branch(node: TreeNode) -> None:
@@ -162,39 +208,34 @@ class AutoPruneStrategy(TreeBuildingStrategy):
             current_node = new_tree_node
 
         def concat_one_not_imm_node_to_current_node() -> None:
-            """Concatenate one node from not_imm_node_stack to current_node."""
+            """Concatenate one candidate line from not_imm_node_queue to current_node."""
             nonlocal current_node, not_imm_node_queue
-            not_imm_node = not_imm_node_queue.popleft()
-            current_node.concat_node(not_imm_node)
+            candidates = not_imm_node_queue.popleft()
+            if not candidates:
+                return
+            current_node.concat_node(_select_by_priority(candidates))
 
-        def is_all_not_imm_nodes_siblings() -> bool:
-            """Check if all nodes in not_imm_node_stack are siblings."""
-            nonlocal not_imm_node_queue
-            if len(not_imm_node_queue) < 2:
-                return True
-            for i in range(len(not_imm_node_queue) - 1):
-                if not is_imm_next(
-                    not_imm_node_queue[i].level_seq, not_imm_node_queue[i + 1].level_seq
-                ):
-                    return False
-            return True
+        for candidates in multi_chain[1:]:
+            if not candidates:
+                continue
 
-        for node in chain[1:]:
-            # add node to tree if it is immediate next to current_node
-            if is_imm_next(current_node.level_seq, node.level_seq):
-                # merge not_imm_node_stack into current_node
+            immediate_node = self._select_immediate_candidate(current_node, candidates)
+
+            if immediate_node:
+                # merge queued nodes deemed as noise before attaching the new node
                 while not_imm_node_queue:
                     concat_one_not_imm_node_to_current_node()
-                add_node_to_tree(node)
+                add_node_to_tree(immediate_node)
             else:
-                not_imm_node_queue.append(node)
+                not_imm_node_queue.append(candidates)
 
             assert len(not_imm_node_queue) <= 3, "Too many nodes in not_imm_node_stack"
-            # if there are three nodes in not_imm_node_stack, check if they are siblings
             if len(not_imm_node_queue) == 3:
-                if is_all_not_imm_nodes_siblings():
-                    while not_imm_node_queue:
-                        add_node_to_tree(not_imm_node_queue.popleft())
+                contiguous = self._find_contiguous_sequence(list(not_imm_node_queue))
+                if contiguous:
+                    not_imm_node_queue.clear()
+                    for node in contiguous:
+                        add_node_to_tree(node)
                 else:
                     concat_one_not_imm_node_to_current_node()
 
@@ -202,3 +243,34 @@ class AutoPruneStrategy(TreeBuildingStrategy):
             concat_one_not_imm_node_to_current_node()
 
         return root
+
+    @staticmethod
+    def _select_immediate_candidate(
+        prev_node: BaseNode, candidates: Sequence[ChainNode]
+    ) -> Optional[ChainNode]:
+        immediate_candidates = [
+            node for node in candidates if is_imm_next(prev_node.level_seq, node.level_seq)
+        ]
+        if not immediate_candidates:
+            return None
+        return _select_by_priority(immediate_candidates)
+
+    @staticmethod
+    def _find_contiguous_sequence(
+        candidate_groups: Sequence[Sequence[ChainNode]],
+    ) -> Optional[List[ChainNode]]:
+        if not candidate_groups:
+            return None
+
+        search_queue = deque([(0, None, [])])  # (group_index, prev_node, path)
+
+        while search_queue:
+            index, prev_node, path = search_queue.popleft()
+            if index == len(candidate_groups):
+                return path
+
+            for candidate in candidate_groups[index]:
+                if prev_node is None or is_imm_next(prev_node.level_seq, candidate.level_seq):
+                    search_queue.append((index + 1, candidate, path + [candidate]))
+
+        return None

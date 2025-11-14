@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Union, Sequence, Any
 from arborparser.node import ChainNode
 from arborparser.pattern import LevelPattern
 
@@ -21,6 +21,16 @@ class ChainParser:
         """
         self.patterns = patterns
 
+    def parse_to_multi_chain(self, text: str) -> List[List[ChainNode]]:
+        """
+        Parse text and return every ChainNode candidate detected per line.
+
+        A line might match multiple patterns or a single pattern might produce multiple
+        hierarchy sequences. Each inner list preserves the order of the candidates
+        detected for that line.
+        """
+        return self._parse_to_chain(text, is_multi_chain=True)
+
     def parse_to_chain(self, text: str) -> List[ChainNode]:
         """
         Core parsing logic to convert text into a chain of nodes.
@@ -31,32 +41,62 @@ class ChainParser:
         Returns:
             List[ChainNode]: List of parsed ChainNodes.
         """
+        return self._parse_to_chain(text, is_multi_chain=False)
 
-        chain: List[ChainNode] = [
-            ChainNode(level_seq=[], level_text="", title="ROOT", pattern_priority=0)
-        ]
+    def _parse_to_chain(
+        self, text: str, is_multi_chain: bool = False
+    ) -> Union[List[ChainNode], List[List[ChainNode]]]:
+        root = ChainNode(level_seq=[], level_text="", title="ROOT", pattern_priority=0)
+        current_nodes: List[ChainNode] = [root]
         current_content: List[str] = []
 
-        for line in text.split("\n"):
+        if is_multi_chain:
+            multi_result: List[List[ChainNode]] = [[root]]
+        else:
+            chain: List[ChainNode] = [root]
 
-            # Try to match title pattern
-            if (line.strip()) and (
-                (chain_node := self._detect_level(line)) is not None
-            ):
-                # Submit previous node's content when encountering a new title
-                if chain:
-                    chain[-1].content = "\n".join(current_content) + "\n"
+        for line in text.split("\n"):
+            stripped = line.strip()
+            if not stripped:
+                current_content.append(line)
+                continue
+
+            detected_nodes = self._detect_level(line, is_multi_chain=is_multi_chain)
+            if detected_nodes:
+                self._assign_content(
+                    current_nodes, current_content, add_trailing_newline=True
+                )
+                current_nodes = detected_nodes
                 current_content = [line]
-                chain.append(chain_node)
+
+                if is_multi_chain:
+                    multi_result.append(detected_nodes)
+                else:
+                    chain.append(detected_nodes[0])
             else:
                 current_content.append(line)
 
-        # Handle the content of the last node
-        if current_content:
-            chain[-1].content = "\n".join(current_content)
-        return chain
+        self._assign_content(current_nodes, current_content, add_trailing_newline=False)
+        return multi_result if is_multi_chain else chain
 
-    def _detect_level(self, line: str) -> Optional[ChainNode]:
+    @staticmethod
+    def _assign_content(
+        nodes: Sequence[ChainNode],
+        content_lines: List[str],
+        *,
+        add_trailing_newline: bool,
+    ) -> None:
+        if not nodes:
+            return
+
+        content = "\n".join(content_lines)
+        if add_trailing_newline:
+            content += "\n"
+
+        for node in nodes:
+            node.content = content
+
+    def _detect_level(self, line: str, is_multi_chain: bool = False) -> List[ChainNode]:
         """
         Apply all patterns to detect the title hierarchy.
 
@@ -64,20 +104,53 @@ class ChainParser:
             line (str): Text line to analyze.
 
         Returns:
-            Optional[ChainNode]: The detected ChainNode or None if no pattern matches.
+            List[ChainNode]: Detected ChainNodes (may be empty if nothing matches).
         """
+        detected: List[ChainNode] = []
         for priority, pattern in enumerate(self.patterns):
-            if match := pattern.regex.match(line):
-                try:
-                    level_seq = pattern.converter(match)
-                    level_text = match.group(0)
-                    title = line[len(level_text) :].strip()
-                    return ChainNode(
-                        level_seq=level_seq,
-                        level_text=level_text.strip(),
-                        title=title,
-                        pattern_priority=priority,
-                    )
-                except ValueError:
-                    continue
-        return None
+            match = pattern.regex.match(line)
+            if not match:
+                continue
+
+            try:
+                level_sequences = self._normalize_level_sequences(
+                    pattern.converter(match)
+                )
+            except ValueError:
+                continue
+
+            if not level_sequences:
+                continue
+
+            level_text = match.group(0)
+            title = line[len(level_text) :].strip()
+
+            nodes = [
+                ChainNode(
+                    level_seq=seq,
+                    level_text=level_text.strip(),
+                    title=title,
+                    pattern_priority=priority,
+                )
+                for seq in level_sequences
+            ]
+
+            if nodes:
+                if not is_multi_chain:
+                    return [nodes[0]]
+                detected.extend(nodes)
+
+        return detected
+
+    @staticmethod
+    def _normalize_level_sequences(result: Any) -> List[List[int]]:
+        """
+        Ensure converter output is treated uniformly as a list of level sequences.
+        """
+        if not result:
+            return []
+
+        first = result[0]
+        if isinstance(first, (list, tuple)):
+            return [list(seq) for seq in result if seq]
+        return [list(result)]

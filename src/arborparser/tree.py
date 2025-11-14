@@ -1,4 +1,4 @@
-from typing import Dict, List, Any, Optional, Union
+from typing import Dict, List, Any, Optional, Union, cast
 from arborparser.node import ChainNode, TreeNode
 import json
 from pathlib import Path
@@ -20,12 +20,14 @@ class TreeBuilder:
 
         self.strategy = strategy
 
-    def build_tree(self, chain: List[ChainNode]) -> TreeNode:
+    def build_tree(
+        self, chain: Union[List[ChainNode], List[List[ChainNode]]]
+    ) -> TreeNode:
         """
         Build a tree from a list of ChainNodes using the specified strategy.
 
         Args:
-            chain (List[ChainNode]): List of ChainNodes.
+            chain (List[ChainNode] | List[List[ChainNode]]): Parsed chain data.
 
         Returns:
             TreeNode: The root of the constructed tree.
@@ -35,17 +37,33 @@ class TreeBuilder:
 
 class TreeExporter:
     @staticmethod
-    def export_chain(chain: List[ChainNode]) -> str:
+    def export_chain(
+        chain: Union[List[ChainNode], List[List[ChainNode]]]
+    ) -> str:
         """
         Export the chain as a string.
 
         Args:
-            chain (List[ChainNode]): List of ChainNodes.
+            chain (List[ChainNode] | List[List[ChainNode]]): ChainNodes or multi-candidate rows.
 
         Returns:
             str: Formatted string of the chain.
         """
-        return "\n".join(f"LEVEL-{n.level_seq}: {n.title}" for n in chain)
+        if not chain:
+            return ""
+
+        first = chain[0]
+        if isinstance(first, ChainNode):
+            return "\n".join(f"LEVEL-{n.level_seq}: {n.title}" for n in chain)  # type: ignore[list-item]
+
+        multi_chain = cast(List[List[ChainNode]], chain)
+        lines = []
+        for candidates in multi_chain:
+            inner = ", ".join(
+                f"LEVEL-{node.level_seq}: {node.title}" for node in candidates
+            )
+            lines.append(f"[{inner}]")
+        return "\n".join(lines)
 
     @staticmethod
     def export_tree(tree: TreeNode) -> str:
