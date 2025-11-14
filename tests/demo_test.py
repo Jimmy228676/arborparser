@@ -30,32 +30,19 @@ Chapter 2 Building Blocks
 2.1 Component A
     Details about the first component.
 
-2.1.1 Component A.1
-    Details about the first component.
-
-2.2 2Component B
+2.2 Component B
     Details about the second component. End of document.
 """
 
     # Configure parsing rules
-    num_pattern_strict = NUMERIC_DOT_PATTERN_BUILDER
-    num_pattern = NUMERIC_DOT_PATTERN_BUILDER.modify(
-        prefix_regex=r"[\#\s]*",
-        suffix_regex=r"[\.\s]*",
-        separator=r"[\.\s]+",
-        is_sep_regex=True,
-        min_level=2,
-    ).build()
-
     patterns = [
         ENGLISH_CHAPTER_PATTERN_BUILDER.build(),  # Use the English chapter pattern
-        NUMERIC_DOT_PATTERN_BUILDER.build(),  # Use the numeric dot pattern
-        num_pattern,
+        NUMERIC_DOT_PATTERN_BUILDER.build(),
     ]
 
     # Parsing process
     parser = ChainParser(patterns)
-    chain = parser.parse_to_multi_chain(test_text)
+    chain = parser.parse_to_chain(test_text)
 
     print("=== Chain Structure ===")
     print(TreeExporter.export_chain(chain))
