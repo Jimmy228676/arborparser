@@ -3,7 +3,7 @@ from typing import Optional
 # All Roman numerals including lowercase
 ALL_ROMAN_NUMERALS = "IVXLCDMivxlcdm"
 # All Chinese characters used in numeric representation
-ALL_CHINESE_CHARS = "0０零○〇洞1１一壹ㄧ弌么2２二貳贰弍兩两3３三參叁弎参叄4４四肆䦉刀5５五伍6６六陸陆7７七柒拐8８八捌杯9９九玖勾十拾什呀百佰千仟萬万億亿兆京經经垓秭杼穰壤溝沟澗涧正載極"
+ALL_CHINESE_CHARS = "零○〇洞一壹ㄧ弌么二貳贰弍兩两三參叁弎参叄四肆䦉刀五伍六陸陆七柒拐八捌杯九玖勾十拾什呀百佰千仟萬万億亿兆京經经垓秭杼穰壤溝沟澗涧正載極"
 
 
 def roman_to_int(roman_str: str) -> Optional[int]:
@@ -78,16 +78,16 @@ def chinese_to_int(chinese_str: str) -> Optional[int]:
         The converted integer, or None if the input is invalid.
     """
     digit_chars = [
-        "0０零○〇洞",
-        "1１一壹ㄧ弌么",
-        "2２二貳贰弍兩两",
-        "3３三參叁弎参叄",
-        "4４四肆䦉刀",
-        "5５五伍",
-        "6６六陸陆",
-        "7７七柒拐",
-        "8８八捌杯",
-        "9９九玖勾",
+        "零○〇洞",
+        "一壹ㄧ弌么",
+        "二貳贰弍兩两",
+        "三參叁弎参叄",
+        "四肆䦉刀",
+        "五伍",
+        "六陸陆",
+        "七柒拐",
+        "八捌杯",
+        "九玖勾",
     ]
     unit_chars = ["十拾什呀", "百佰", "千仟"]
     magnitude_chars = [
@@ -329,7 +329,6 @@ if __name__ == "__main__":
         # Invalid characters
         "ABC",
         "XIVY",
-        "123",
         "M1CM",
         "I.V",
         "I-V",
